@@ -1,0 +1,2 @@
+# 讓 repo 內一律存 LF，跨機器/跨 OS 編輯時不會整檔變成假 diff
+* text=auto

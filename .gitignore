@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+
+# build/ 是匯出的產物。要跟團隊共用設計 DNA 的話，
+# 把下面這行註解掉，讓 build/<profile>/AGENTS.md 進版控。
+build/

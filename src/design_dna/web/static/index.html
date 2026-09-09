@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design DNA</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+</head>
+<body>
+<div id="toast" class="toast" hidden></div>
+
+<aside class="sidebar">
+  <div class="brand">
+    <span class="brand-mark">🧬</span>
+    <div>
+      <div class="brand-name">Design DNA</div>
+      <div class="brand-sub" id="rootPath">—</div>
+    </div>
+  </div>
+
+  <label class="field">
+    <span class="field-label">目前 profile</span>
+    <select id="profileSelect"></select>
+  </label>
+  <div class="profile-meta" id="profileMeta"></div>
+  <div class="row-buttons">
+    <button class="btn btn-ghost btn-sm" id="newProfileBtn">＋ 新 profile</button>
+    <button class="btn btn-ghost btn-sm danger" id="delProfileBtn">刪除</button>
+  </div>
+
+  <nav class="nav" id="nav">
+    <button class="nav-item is-active" data-view="genes">規則庫<span class="pill" id="countGenes">0</span></button>
+    <button class="nav-item" data-view="sources">參考資料<span class="pill" id="countSources">0</span></button>
+    <button class="nav-item" data-view="proposals">AI 提案<span class="pill" id="countProposals">0</span></button>
+    <button class="nav-item" data-view="export">匯出</button>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div id="apiMode" class="hint"></div>
+    <div class="hint">v<span id="version">—</span></div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- ============ 規則庫 ============ -->
+  <section class="view is-active" data-view="genes">
+    <header class="view-head">
+      <h1>規則庫</h1>
+      <div class="head-actions">
+        <input type="search" id="geneSearch" placeholder="搜尋標題或內容…" class="input">
+        <button class="btn" id="newGeneBtn">＋ 新增規則</button>
+      </div>
+    </header>
+
+    <div class="chips" id="categoryChips"></div>
+
+    <div class="split">
+      <div class="list-pane" id="geneList"></div>
+      <div class="detail-pane" id="geneDetail">
+        <div class="empty">
+          <p>左邊選一條規則來看內容，或按「＋ 新增規則」自己寫一條。</p>
+          <p class="hint">每條規則就是一個 Markdown 檔，存在
+            <code>dna/profiles/&lt;profile&gt;/genes/</code>。
+            用 <code>[[其他規則id]]</code> 可以建立 wiki 連結。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 參考資料 ============ -->
+  <section class="view" data-view="sources">
+    <header class="view-head">
+      <h1>參考資料</h1>
+      <div class="head-actions">
+        <button class="btn" id="analyzeBtn">產生 AI 分析任務包</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2 class="card-title">加入一份參考</h2>
+      <p class="hint">支援：前端專案資料夾、單一檔案（.css .html .tsx .md .docx .pdf）、
+        設計稿圖片、或線上網址。程式會先做確定性抽取（色票、字級、間距、斷點、命名慣例），
+        再交給 AI 詮釋。</p>
+      <div class="form-row">
+        <input class="input grow" id="ingestTarget"
+               placeholder="D:\projects\my-site  或  https://example.com">
+        <input class="input" id="ingestNote" placeholder="這是什麼？（選填）">
+        <button class="btn" id="ingestBtn">登錄</button>
+      </div>
+      <div class="hint" id="ingestHint"></div>
+    </div>
+
+    <div id="sourceList" class="cards"></div>
+  </section>
+
+  <!-- ============ 提案 ============ -->
+  <section class="view" data-view="proposals">
+    <header class="view-head">
+      <h1>AI 提案</h1>
+      <div class="head-actions">
+        <select id="proposalSelect" class="input"></select>
+      </div>
+    </header>
+    <div id="proposalBody"></div>
+  </section>
+
+  <!-- ============ 匯出 ============ -->
+  <section class="view" data-view="export">
+    <header class="view-head">
+      <h1>匯出</h1>
+      <div class="head-actions">
+        <select id="exportMode" class="input">
+          <option value="index">index — 主檔放 MUST + 索引（省 context）</option>
+          <option value="full">full — 全部攤平成單一檔</option>
+        </select>
+        <button class="btn btn-ghost" id="copyExportBtn">複製</button>
+        <button class="btn" id="writeExportBtn">寫入檔案</button>
+      </div>
+    </header>
+    <div class="card">
+      <p class="hint" id="exportHint"></p>
+    </div>
+    <pre class="preview" id="exportPreview"></pre>
+  </section>
+
+</main>
+
+<!-- 新增 profile 的對話框 -->
+<dialog id="profileDialog" class="dialog">
+  <form method="dialog">
+    <h2>新增 profile</h2>
+    <label class="field"><span class="field-label">id（英數與連字號）</span>
+      <input class="input" id="npId" placeholder="client-acme" required></label>
+    <label class="field"><span class="field-label">顯示名稱</span>
+      <input class="input" id="npName" placeholder="ACME 客戶專案"></label>
+    <label class="field"><span class="field-label">說明</span>
+      <input class="input" id="npDesc" placeholder="這套風格用在哪"></label>
+    <label class="field"><span class="field-label">繼承自（逗號分隔）</span>
+      <input class="input" id="npExtends" value="base"></label>
+    <menu class="dialog-actions">
+      <button class="btn btn-ghost" value="cancel">取消</button>
+      <button class="btn" value="create" id="npCreate">建立</button>
+    </menu>
+  </form>
+</dialog>
+
+<script src="/app.js" defer></script>
+</body>
+</html>

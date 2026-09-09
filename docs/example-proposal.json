@@ -1,0 +1,266 @@
+{
+  "id": "20260908-005048-personal",
+  "profile": "personal",
+  "sources": [
+    "20260908-005028-sample-site"
+  ],
+  "created": "2026-09-08",
+  "status": "applied",
+  "genes": [
+    {
+      "id": "core-color-palette",
+      "title": "核心色票",
+      "category": "color",
+      "priority": "must",
+      "confidence": 0.9,
+      "tags": [
+        "色彩",
+        "token"
+      ],
+      "related": [
+        "semantic-color-roles",
+        "design-token-first"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "#2563EB / #0F172A / #64748B / #FFFFFF 跨 4 個檔案穩定出現，且都有對應的 CSS 變數"
+        }
+      ],
+      "body": "## Rule\n\n固定使用這組色票，不要臨時調色：\n\n| 角色 | 色碼 | 用途 |\n| --- | --- | --- |\n| primary | `#2563EB` | 主要 CTA、連結、選取狀態 |\n| primary-dark | `#1D4ED8` | 只用於 primary 的 hover / active |\n| ink | `#0F172A` | 主文字 |\n| muted | `#64748B` | 次要文字、說明文字 |\n| surface | `#FFFFFF` | 卡片與主要背景 |\n| surface-alt | `#F8FAFC` | 區塊分隔、淺色底 |\n| danger | `#DC2626` | 錯誤與破壞性操作 |\n| success | `#16A34A` | 成功狀態 |\n\n## Rationale\n\n這是一組 slate 中性色 + 單一藍色強調的配置。藍色只出現在需要被點擊的東西上，\n所以畫面上「藍色 = 可互動」這件事是可預測的。中性色全部落在 slate 色階，\n不混其他灰，冷暖才不會打架。\n\n## Do\n\n```css\n.btn-primary { background: var(--color-primary); color: var(--color-surface); }\n.hint { color: var(--color-muted); }\n```\n\n## Avoid\n\n```css\n/* 不要另外發明藍色 */\n.btn { background: #3B82F6; }\n/* 不要用純黑當文字色 */\nbody { color: #000000; }\n```\n\n語意角色的細節見 [[semantic-color-roles]]。",
+      "decision": "accept"
+    },
+    {
+      "id": "semantic-color-roles",
+      "title": "色彩用語意命名，不用外觀命名",
+      "category": "color",
+      "priority": "should",
+      "confidence": 0.8,
+      "tags": [
+        "色彩",
+        "命名"
+      ],
+      "related": [
+        "core-color-palette",
+        "design-token-first"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "19 個 CSS 變數全部是 --color-primary / --color-ink 這類語意名，沒有 --blue-500"
+        }
+      ],
+      "body": "## Rule\n\nCSS 變數用**用途**命名（`--color-primary`、`--color-ink`、`--color-danger`），\n不要用**外觀**命名（`--blue-500`、`--gray-dark`）。\n\n## Rationale\n\n語意命名讓換色不用改任何使用端。之後要做深色模式，只要換一組變數值，\n所有元件自動跟著走；用 `--blue-500` 的話，深色模式下的藍就會卡在名字裡。\n\n## Do\n\n```css\n:root { --color-danger: #DC2626; }\n.alert { border-color: var(--color-danger); }\n```\n\n## Avoid\n\n```css\n:root { --red-600: #DC2626; }\n.alert { border-color: var(--red-600); }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "type-scale",
+      "title": "字級尺標與字族",
+      "category": "typography",
+      "priority": "must",
+      "confidence": 0.88,
+      "tags": [
+        "排版"
+      ],
+      "related": [
+        "spacing-rhythm"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "字級只出現 14 / 16 / 24 / 32 / 48px 五階，沒有任何中間值"
+        },
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "font-family 全站唯一一組：Inter + Noto Sans TC + system-ui"
+        }
+      ],
+      "body": "## Rule\n\n字族固定為 `\"Inter\", \"Noto Sans TC\", system-ui, sans-serif`（英數在前、中文在後）。\n\n字級只用這五階，不要出現中間值：\n\n| 用途 | size | weight | line-height | tracking |\n| --- | --- | --- | --- | --- |\n| h1 | 48px | 700 | 1.15 | -0.02em |\n| h2 | 32px | 700 | 1.25 | — |\n| h3 | 24px | 600 | 1.3 | — |\n| body | 16px | 400 | 1.6 | -0.01em |\n| small | 14px | 400 | 1.6 | — |\n\n## Rationale\n\n五階夠用、且階與階之間差距大（1.5x 左右），階層一眼就分得出來。\n字級越大行高越緊、字距越負，是為了讓大標不鬆散。\n中文字族擺第二位，讓英數走 Inter、中文走 Noto Sans TC，避免中文被 Inter 的 fallback 渲染得歪掉。\n\n## Do\n\n```css\nh1 { font-size: 48px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }\n```\n\n## Avoid\n\n```css\n/* 不要為了「差一點點」開新階 */\n.subtitle { font-size: 20px; }\n/* 不要把中文字族放第一位 */\nbody { font-family: \"Noto Sans TC\", \"Inter\", sans-serif; }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "spacing-rhythm",
+      "title": "8px 間距尺標",
+      "category": "spacing",
+      "priority": "must",
+      "confidence": 0.85,
+      "tags": [
+        "間距",
+        "token"
+      ],
+      "related": [
+        "type-scale",
+        "design-token-first"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "間距值集中在 8 / 16 / 24 / 32 / 48px，唯一的例外是按鈕的 12px 垂直內距"
+        }
+      ],
+      "body": "## Rule\n\n所有 margin / padding / gap 只能取 `4, 8, 16, 24, 32, 48` px。\n\n唯一允許的例外：按鈕的垂直內距 `12px`（配 `24px` 水平內距）。\n需要其他值時，先問「是不是版面結構有問題」，而不是開新的間距值。\n\n## Rationale\n\n這是一組 8px 基準、只在最小端補 4px 的尺標。限制值域讓垂直節奏自動對齊，\n也讓不同人（或不同 agent）寫出來的區塊間距不會各憑感覺。\n\n## Do\n\n```css\n.stack { display: flex; flex-direction: column; gap: 16px; }\n.section { padding: 48px 24px; }\n```\n\n## Avoid\n\n```css\n.card { padding: 20px; margin-bottom: 18px; }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "container-and-sections",
+      "title": "版面容器與區塊節奏",
+      "category": "layout",
+      "priority": "should",
+      "confidence": 0.75,
+      "tags": [
+        "版面"
+      ],
+      "related": [
+        "spacing-rhythm",
+        "breakpoint-strategy"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": ".section 固定 max-width: 1200px + margin: 0 auto，垂直內距一律 48px"
+        }
+      ],
+      "body": "## Rule\n\n頁面內容包在 `max-width: 1200px; margin: 0 auto` 的容器裡。\n區塊的垂直內距固定 `48px`，水平內距隨斷點放大：手機 `24px`、平板 `32px`、桌機 `48px`。\n\n版面用 flex 原語組合，不要每個地方重寫：\n- `.stack` — 垂直堆疊，`gap: 16px`\n- `.cluster` — 水平排列並垂直置中，`gap: 8px`\n\n## Rationale\n\n1200px 在 1440 螢幕上左右各留約 120px，長文行寬不會過寬。\n垂直內距不隨斷點變，是因為手機上的垂直空間比水平空間值錢，\n縮水平就好。\n\n## Do\n\n```css\n.section { max-width: 1200px; margin: 0 auto; padding: 48px 24px; }\n@media (min-width: 1024px) { .section { padding: 48px; } }\n```\n\n## Avoid\n\n```css\n/* 不要讓內容貼著螢幕邊 */\n.section { max-width: 100%; padding: 48px 0; }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "breakpoint-strategy",
+      "title": "行動優先的兩個斷點",
+      "category": "responsive",
+      "priority": "must",
+      "confidence": 0.82,
+      "tags": [
+        "RWD"
+      ],
+      "related": [
+        "container-and-sections"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "只出現 min-width: 768px 與 min-width: 1024px 兩個斷點，沒有任何 max-width query"
+        }
+      ],
+      "body": "## Rule\n\n只用兩個斷點，且一律是 `min-width`：\n\n- `768px` — 平板\n- `1024px` — 桌機\n\n基礎樣式寫手機版，斷點只往上加東西。**不要寫 `max-width` query。**\n\n## Rationale\n\nmin-width 疊加的方向是單向的，樣式來源永遠可以往回追；\nmax-width 一混進來就會出現「兩邊都命中、看誰後寫」的覆蓋問題。\n兩個斷點也足以涵蓋絕大多數版面切換，開第三個之前先確認真的必要。\n\n## Do\n\n```css\n.grid { display: flex; flex-direction: column; gap: 24px; }\n@media (min-width: 1024px) {\n  .grid { display: grid; grid-template-columns: repeat(3, 1fr); }\n}\n```\n\n## Avoid\n\n```css\n@media (max-width: 767px) { .grid { display: block; } }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "surface-elevation",
+      "title": "卡片圓角與陰影",
+      "category": "component",
+      "priority": "should",
+      "confidence": 0.8,
+      "tags": [
+        "元件",
+        "卡片"
+      ],
+      "related": [
+        "core-color-palette",
+        "motion-timing"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "border-radius 全站只有 12px 一個值；陰影只有靜置與 hover 兩階"
+        }
+      ],
+      "body": "## Rule\n\n所有可點擊的容器（按鈕、卡片、輸入框）圓角固定 `12px`。\n\n陰影只有兩階，而且顏色一定是主文字色的透明版，不是純黑：\n\n```css\n--shadow-card:  0 1px 3px  rgba(15, 23, 42, 0.08);  /* 靜置 */\n--shadow-hover: 0 8px 24px rgba(15, 23, 42, 0.12);  /* hover */\n```\n\n## Rationale\n\n單一圓角值讓所有元件看起來像同一套系統。用帶色陰影（slate 的透明版）而非純黑，\n陰影才會融進背景，不會像髒污浮在上面。\n\n## Do\n\n```css\n.card { border-radius: 12px; box-shadow: var(--shadow-card); }\n.card:hover { box-shadow: var(--shadow-hover); }\n```\n\n## Avoid\n\n```css\n.card { border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "motion-timing",
+      "title": "動效只有一組時長與曲線",
+      "category": "motion",
+      "priority": "should",
+      "confidence": 0.78,
+      "tags": [
+        "動效"
+      ],
+      "related": [
+        "surface-elevation",
+        "reduced-motion"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "所有 transition 都是 200ms cubic-bezier(0.16, 1, 0.3, 1)，沒有第二組"
+        }
+      ],
+      "body": "## Rule\n\n所有轉場一律 `200ms cubic-bezier(0.16, 1, 0.3, 1)`。\n只對會變的屬性做轉場（`background`、`box-shadow`、`transform`、`opacity`），\n**不要寫 `transition: all`。**\n\n## Rationale\n\n這條曲線起步快、尾巴長，收尾時看起來像自然減速。200ms 短到不擋操作、\n長到能被眼睛看見。統一一組值，整站的手感才會一致。\n`transition: all` 會連 layout 屬性一起補間，是掉幀的主要來源。\n\n## Do\n\n```css\n.card { transition: box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1); }\n```\n\n## Avoid\n\n```css\n.card { transition: all 0.3s ease-in-out; }\n```\n\n減量偏好的處理見 [[reduced-motion]]。",
+      "decision": "accept"
+    },
+    {
+      "id": "reduced-motion",
+      "title": "尊重 prefers-reduced-motion",
+      "category": "a11y",
+      "priority": "must",
+      "confidence": 0.9,
+      "tags": [
+        "無障礙",
+        "動效"
+      ],
+      "related": [
+        "motion-timing"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "components.css 有 @media (prefers-reduced-motion: reduce) 全域關閉 transition"
+        }
+      ],
+      "body": "## Rule\n\n每個專案的全域樣式都要包含這段，位置放在樣式表最後：\n\n```css\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after {\n    animation-duration: 0.01ms !important;\n    animation-iteration-count: 1 !important;\n    transition-duration: 0.01ms !important;\n    scroll-behavior: auto !important;\n  }\n}\n```\n\n## Rationale\n\n前庭功能障礙的使用者會因為位移動畫而暈眩。這是作業系統層級的明確表態，\n不照做等於忽略使用者已經講出口的需求。用 `0.01ms` 而不是 `none`，\n是為了讓 `transitionend` 事件照常觸發，不會讓依賴它的邏輯卡住。\n\n## Do\n\n把上面那段當成每個專案 reset 的一部分，跟 `box-sizing` 一起寫死。\n\n## Avoid\n\n```css\n/* 不要只關掉部分元件，漏掉的那些才是問題 */\n@media (prefers-reduced-motion: reduce) { .hero { animation: none; } }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "design-token-first",
+      "title": "先定 token 再寫元件",
+      "category": "code",
+      "priority": "must",
+      "confidence": 0.85,
+      "tags": [
+        "流程",
+        "CSS"
+      ],
+      "related": [
+        "core-color-palette",
+        "spacing-rhythm",
+        "type-scale"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "專案分成 tokens.css（19 個變數）與 components.css，元件檔沒有任何硬編碼的新值"
+        }
+      ],
+      "body": "## Rule\n\n樣式分兩層，順序不能反：\n\n1. `tokens.css` — 只有 `:root` 變數（色彩、間距、圓角、陰影、緩動曲線）\n2. `components.css` — 只能引用 token，不得引入新的原始值\n\n寫元件時如果找不到適用的 token，先回頭決定要不要新增 token，\n而不是就地寫死一個值。\n\n## Rationale\n\n這條規則是上面所有數值規則之所以守得住的原因。\n一旦允許元件檔硬編碼，尺標就會慢慢腐蝕，半年後回頭看會有 11 種灰。\n\n## Do\n\n```css\n/* components.css */\n.card { padding: var(--space-4); border-radius: var(--radius-md); }\n```\n\n## Avoid\n\n```css\n/* components.css */\n.card { padding: 24px; border-radius: 12px; }\n```",
+      "decision": "accept"
+    },
+    {
+      "id": "utility-with-named-components",
+      "title": "Tailwind 與具名 class 的分工",
+      "category": "code",
+      "priority": "should",
+      "confidence": 0.62,
+      "tags": [
+        "Tailwind",
+        "命名"
+      ],
+      "related": [
+        "design-token-first"
+      ],
+      "evidence": [
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "JSX 同時出現 Tailwind utility（flex gap-4 px-6）與具名 class（btn-primary、section）"
+        },
+        {
+          "source": "20260908-005028-sample-site",
+          "detail": "CSS 選擇器命名以 kebab-case 為主（7 次），卡片使用 BEM（card__title / card--featured，3 次）"
+        }
+      ],
+      "body": "## Rule\n\n兩套並用，分工如下：\n\n- **版面配置**（flex、grid、gap、padding）用 Tailwind utility 直接寫在 JSX 上\n- **可重複的視覺元件**（按鈕、卡片、導覽列）用具名 class，樣式寫在 CSS 檔\n\n具名 class 用 kebab-case；元件有內部結構時才升級成 BEM\n（`card__title`、`card--featured`）。\n\n## Rationale\n\n版面是一次性的，寫在 JSX 上最好讀；元件是會重複的，抽出來才不會到處長出變體。\n\n信心度偏低：來源專案的樣本量小，這條比較像是觀察到的傾向而不是明確的決定。\n如果實際上有更明確的規則（例如「元件一律用 shadcn」），請直接改掉這條。\n\n## Do\n\n```jsx\n<section className=\"section flex flex-col gap-4\">\n  <a className=\"btn-primary\" href=\"/start\">開始使用</a>\n</section>\n```\n\n## Avoid\n\n```jsx\n<a className=\"bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700\">\n  開始使用\n</a>\n```",
+      "decision": "accept"
+    }
+  ],
+  "applied_at": "2026-09-08"
+}

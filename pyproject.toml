@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "design-dna"
+version = "0.1.0"
+description = "把個人網頁設計習慣與風格記錄成可攜式的 AI 知識庫"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# 圖片取色與網址抓取。沒裝也能跑，只是對應來源會被跳過。
+extras = [
+    "pillow>=10.0",
+    "requests>=2.31",
+]
+# PDF 文字抽取。沒裝的話 PDF 會標記成「請 agent 自行讀取」。
+pdf = [
+    "pymupdf>=1.24",
+]
+
+[project.scripts]
+design-dna = "design_dna.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"design_dna.web" = ["static/*"]

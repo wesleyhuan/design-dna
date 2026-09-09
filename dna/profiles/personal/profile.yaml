@@ -1,0 +1,7 @@
+id: personal
+name: Wesley 個人風格
+description: 我自己接案與 side project 的預設風格
+extends:
+- base
+created: '2026-09-08'
+updated: '2026-09-08'
