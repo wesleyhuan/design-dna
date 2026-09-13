@@ -1,2 +1,6 @@
 # 讓 repo 內一律存 LF，跨機器/跨 OS 編輯時不會整檔變成假 diff
 * text=auto
+
+# 證據原件必須逐位元組保留：不做換行轉換，
+# 否則在 Windows clone 之後檔案變 CRLF，sha256 對不上，doctor 會誤報被竄改
+dna/sources/*/raw/** -text

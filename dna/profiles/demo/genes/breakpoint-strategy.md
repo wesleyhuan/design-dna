@@ -11,7 +11,7 @@ tags:
 related:
 - container-and-sections
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: '只出現 min-width: 768px 與 min-width: 1024px 兩個斷點，沒有任何 max-width query'
 ---
 

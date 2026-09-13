@@ -19,7 +19,7 @@ from typing import Any, Callable
 from urllib.parse import parse_qs, unquote, urlparse
 
 from .. import __version__, analyze as analyze_mod, exporters
-from ..ingest import ingest as do_ingest, summarize
+from ..ingest import ingest as do_ingest, summarize, verify_source
 from ..models import Gene, slugify
 from ..resolve import link_graph, resolve
 from ..store import BASE_PROFILE, Workspace
@@ -163,16 +163,28 @@ def api_gene_delete(ws: Workspace, m, query, body) -> dict[str, Any]:
 def api_sources(ws: Workspace, m, query, body) -> dict[str, Any]:
     items = []
     for s in ws.list_sources():
-        items.append({**s.to_dict(), "summary": summarize(s)})
+        items.append({
+            **s.to_dict(),
+            "summary": summarize(s),
+            "cited_by": [p + "/" + g for p, g in ws.genes_citing(s.id)],
+            "integrity": verify_source(ws, s),
+        })
     return {"sources": items}
 
 
 @route("DELETE", r"/api/sources/([^/]+)")
 def api_source_delete(ws: Workspace, m, query, body) -> dict[str, Any]:
     sid = unquote(m.group(1))
-    if not ws.delete_source(sid):
+    if ws.get_source(sid) is None:
         raise ApiError("找不到來源：" + sid, 404)
-    return {"deleted": sid}
+    citing = ws.genes_citing(sid)
+    force = (query.get("force") or ["0"])[0] == "1"
+    if citing and not force:
+        raise ApiError("這份來源是 " + str(len(citing)) + " 條規則的證據（"
+                       + ", ".join(p + "/" + g for p, g in citing)
+                       + "），刪掉後它們就追不回出處。", 409)
+    ws.delete_source(sid)
+    return {"deleted": sid, "orphaned": [p + "/" + g for p, g in citing]}
 
 
 @route("POST", "/api/ingest")
@@ -182,7 +194,8 @@ def api_ingest(ws: Workspace, m, query, body) -> dict[str, Any]:
         raise ApiError("請給一個檔案路徑、資料夾或網址")
     try:
         src = do_ingest(ws, target, profile=body.get("profile") or BASE_PROFILE,
-                        note=body.get("note") or "")
+                        note=body.get("note") or "",
+                        keep_raw=body.get("keep_raw", True) is not False)
     except FileNotFoundError as exc:
         raise ApiError(str(exc), 404) from exc
     except Exception as exc:                        # noqa: BLE001

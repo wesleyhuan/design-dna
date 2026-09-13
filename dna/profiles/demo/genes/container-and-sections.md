@@ -12,7 +12,7 @@ related:
 - spacing-rhythm
 - breakpoint-strategy
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: '.section 固定 max-width: 1200px + margin: 0 auto，垂直內距一律 48px'
 ---
 

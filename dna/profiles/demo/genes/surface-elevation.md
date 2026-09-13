@@ -13,7 +13,7 @@ related:
 - core-color-palette
 - motion-timing
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: border-radius 全站只有 12px 一個值；陰影只有靜置與 hover 兩階
 ---
 

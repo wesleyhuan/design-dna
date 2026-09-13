@@ -55,8 +55,14 @@ def _facts_block(ws: Workspace, source_ids: list[str]) -> tuple[str, list[str]]:
         src = ws.get_source(sid)
         if not src:
             continue
+        raw_rel = "dna/sources/" + src.id + "/raw/"
+        raw_list = ("- 留底原件（evidence.locator 請填這些路徑之一）：\n"
+                    + "".join("  - `" + f + "`\n" for f in src.files[:60])
+                    if src.files else "- 留底原件：無（這份證據換機器後無法驗證）\n")
         chunks.append("### 來源 `" + src.id + "`（" + src.kind + "）\n\n"
                       + "- 出處：" + (src.origin or "-") + "\n"
+                      + "- 原件目錄：`" + raw_rel + "`\n"
+                      + raw_list
                       + ("- 備註：" + src.note + "\n" if src.note else "")
                       + "\n```json\n"
                       + json.dumps(src.facts, ensure_ascii=False, indent=2)
@@ -130,7 +136,8 @@ TASK_TEMPLATE = """# Design DNA 分析任務：{profile}
       "tags": ["色彩"],
       "related": ["semantic-color-roles"],
       "evidence": [
-        {{"source": "{first_source}", "detail": "#2563EB 在 14 個檔案出現 47 次"}}
+        {{"source": "{first_source}", "locator": "styles/tokens.css",
+          "detail": "#2563EB 在 14 個檔案出現 47 次，定義在 --color-primary"}}
       ],
       "body": "## Rule\\n...\\n\\n## Rationale\\n...\\n\\n## Do\\n...\\n\\n## Avoid\\n...",
       "decision": "pending"
@@ -148,6 +155,13 @@ TASK_TEMPLATE = """# Design DNA 分析任務：{profile}
 - **Do / Avoid 各給至少一個程式碼片段或具體例子。**
 - 想連到別的基因就用 `[[gene-id]]`，這是 wiki 連結，會建立關聯圖。
 - 全部用繁體中文書寫（程式碼與色碼除外）。
+
+### 證據要能追溯
+
+- `evidence.source` 必須是上面列出的來源 id，不能自己編。
+- `evidence.locator` 填留底原件的相對路徑（可加選擇器，例如 `styles/components.css .card`），
+  讓人之後能打開那個檔、找到那一行，驗證這條規則不是你想像出來的。
+- 需要確認時，直接去原件目錄讀檔，不要只憑事實區塊的統計數字下結論。
 
 ### 特別注意
 

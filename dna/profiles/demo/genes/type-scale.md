@@ -11,9 +11,9 @@ tags:
 related:
 - spacing-rhythm
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: 字級只出現 14 / 16 / 24 / 32 / 48px 五階，沒有任何中間值
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: font-family 全站唯一一組：Inter + Noto Sans TC + system-ui
 ---
 

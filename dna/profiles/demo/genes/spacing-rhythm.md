@@ -13,7 +13,7 @@ related:
 - type-scale
 - design-token-first
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: 間距值集中在 8 / 16 / 24 / 32 / 48px，唯一的例外是按鈕的 12px 垂直內距
 ---
 

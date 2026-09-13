@@ -25,7 +25,11 @@ async function api(method, path, body) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({ error: "回應不是 JSON" }));
-  if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+  if (!res.ok) {
+    const err = new Error(data.error || ("HTTP " + res.status));
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
@@ -394,6 +398,13 @@ async function loadSources() {
       '<div class="hint">' + esc(s.id) + " · " + esc(s.kind) + " · profile " +
         esc(s.profile) + (s.note ? " · " + esc(s.note) : "") + "</div>" +
       "<ul class=\"hint\">" + s.summary.map((l) => "<li>" + esc(l) + "</li>").join("") + "</ul>" +
+      (s.cited_by.length
+        ? '<p class="hint">被 <b>' + s.cited_by.length + "</b> 條規則當作證據：" +
+          s.cited_by.map((c) => "<code>" + esc(c) + "</code>").join(" ") + "</p>"
+        : "") +
+      (s.integrity.length
+        ? '<p class="hint danger">原件有問題：' + s.integrity.map(esc).join("、") + "</p>"
+        : "") +
       swatchRow(colors) +
     "</div>";
   }).join("");
@@ -408,6 +419,7 @@ async function doIngest() {
   try {
     const src = await api("POST", "/api/ingest", {
       target, profile: S.profile, note: $("#ingestNote").value.trim(),
+      keep_raw: !$("#ingestNoRaw").checked,
     });
     toast("已登錄 " + src.id);
     $("#ingestTarget").value = "";
@@ -614,9 +626,17 @@ function wire() {
   $("#sourceList").addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-del-source]");
     if (!btn) return;
-    if (!confirm("刪除這份參考資料？（已寫入的規則不受影響）")) return;
+    const url = "/api/sources/" + encodeURIComponent(btn.dataset.delSource);
+    if (!confirm("刪除這份參考資料與它的留底原件？")) return;
     try {
-      await api("DELETE", "/api/sources/" + encodeURIComponent(btn.dataset.delSource));
+      try {
+        await api("DELETE", url);
+      } catch (err) {
+        // 409 = 有規則拿它當證據。講清楚代價，讓使用者自己決定
+        if (err.status !== 409) throw err;
+        if (!confirm(err.message + "\n\n仍然要刪除嗎？")) return;
+        await api("DELETE", url + "?force=1");
+      }
       toast("已刪除");
       await loadSources();
       await loadMeta();

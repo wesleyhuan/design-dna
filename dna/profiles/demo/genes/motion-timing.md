@@ -12,7 +12,7 @@ related:
 - surface-elevation
 - reduced-motion
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: 所有 transition 都是 200ms cubic-bezier(0.16, 1, 0.3, 1)，沒有第二組
 ---
 

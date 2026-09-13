@@ -84,6 +84,22 @@ python dna.py web
 **這一層完全不呼叫 LLM。** 能量測的東西用程式算，AI 只負責詮釋，
 所以就算你沒有 API key 也能用，而且 AI 拿到的是硬數據而不是含糊的印象。
 
+## 可追溯性
+
+每條規則的 `evidence` 都指向一份來源。為了讓這條鏈在任何一台機器上都查得回去：
+
+- **原件留底**：ingest 預設把實際被分析的檔案複製到 `dna/sources/<id>/raw/`，
+  並在 `source.yaml` 記下每個檔的 sha256。原路徑只在當初那台電腦有意義，`raw/` 才會跟著 repo 走。
+- **網頁快照**：網址來源會存下當時抓到的 HTML 與 CSS。網站會改版，快照是唯一能回頭驗證的東西。
+- **刪除保護**：有規則拿某份來源當證據時，直接刪會被擋下（CLI 需加 `--force`，Web UI 會再確認一次）。
+- **健康檢查**：`python dna.py doctor` 會回報指向不存在來源的證據、遺失的原件、以及內容被改過的原件。
+
+代價是 repo 會隨著參考資料變大，這是刻意的取捨。
+
+> ⚠️ **原件會被 commit 並 push。** 如果 repo 是公開的，你 ingest 的客戶設計稿、
+> 未公開的原始碼、內部規範文件都會跟著公開。機密素材請把 repo 設為 private，
+> 或登錄時加 `--no-raw`（Web UI 勾「不留底原件」）—— 規則照樣產生，只是那份證據換機器後無法驗證。
+
 ## 知識庫長什麼樣
 
 ```
@@ -99,7 +115,10 @@ dna/
 │     └─ genes/
 │        ├─ core-color-palette.md
 │        └─ type-scale.md
-├─ sources/                    參考資料與抽出的事實
+├─ sources/
+│  └─ 20260913-144030-sample-site/
+│     ├─ source.yaml           抽出的事實 + 原件 sha256
+│     └─ raw/                  證據原件（跟著 repo 版控）
 └─ inbox/                      待確認的 AI 提案
 ```
 
@@ -176,13 +195,13 @@ build/personal/
 python dna.py init                          建立工作區
 python dna.py profile list|new|show|rm      管理風格檔
 python dna.py ingest <路徑或網址>            登錄參考資料
-python dna.py sources                       列出參考資料
+python dna.py sources [--remove <id>]       列出 / 刪除參考資料
 python dna.py analyze --profile <p>         產生 AI 分析任務包
 python dna.py proposals                     列出 AI 提案
 python dna.py review [proposal_id]          逐條確認並寫入
 python dna.py gene list|show|rm|status      檢視與編輯單條規則
 python dna.py graph --profile <p>           wiki 連結圖
-python dna.py doctor                        檢查斷連結、缺證據、空內容
+python dna.py doctor                        檢查斷連結、斷證據鏈、原件完整性
 python dna.py export --profile <p>          匯出 AGENTS.md
 python dna.py web                           本地 Web UI
 ```
@@ -204,10 +223,15 @@ python dna.py analyze --profile personal --api
 ## 附的範例
 
 `dna/profiles/demo/` 是一個跑完整條流程產出的範例 profile（11 條規則，含 wiki 連結），
-可以拿來看基因該怎麼寫。不需要的話直接刪：
+證據指向 `dna/sources/20260913-144030-sample-site/`，原件就在 `raw/` 裡，可以實際對照
+規則是從哪幾行 CSS 推出來的。不需要的話直接刪（先刪 profile，來源就不再被引用）：
 
 ```bash
 python dna.py profile rm demo
+```
+
+```bash
+python dna.py sources --remove 20260913-144030-sample-site
 ```
 
 `docs/example-proposal.json` 是提案 JSON 的格式範例。

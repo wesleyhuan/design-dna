@@ -1,0 +1,192 @@
+id: 20260913-144030-sample-site
+kind: code
+origin: C:\Users\wesle\AppData\Local\Temp\claude\D--PYTHON-PRATICE-design-DNA\5321fc68-8f7d-4c79-bfce-0db64a3cc17f\scratchpad\sample_site
+profile: demo
+added: '2026-09-13'
+note: 示範用的 landing page 素材（demo profile 的證據原件）
+files:
+- Hero.tsx
+- styles/components.css
+- styles/tokens.css
+- tailwind.config.js
+- package.json
+checksums:
+  Hero.tsx: 8122ace4db15f2d85e0e42342605d2838ce2d0dbd33fb95c2ceb1f1144e2e738
+  styles/components.css: c106ab2f144b61bbe7723e13dbd45767e26c616910688bec176941eb912040c5
+  styles/tokens.css: b217ceb7ad378ad9db254bd05e98b01600a1da3eddc29acc303775b3114700d3
+  tailwind.config.js: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  package.json: 05103ff3a0075decb707c20ecb62c7e2504270031a428cb7d4c7309254bcf963
+facts:
+  code:
+    scanned_files: 4
+    file_types:
+      .css: 2
+      .tsx: 1
+    colors:
+    - value: '#FFFFFF'
+      count: 5
+    - value: '#0F172A'
+      count: 5
+    - value: '#2563EB'
+      count: 4
+    - value: '#64748B'
+      count: 3
+    - value: '#1D4ED8'
+      count: 2
+    - value: '#F8FAFC'
+      count: 2
+    - value: '#DC2626'
+      count: 1
+    - value: '#16A34A'
+      count: 1
+    font_families:
+    - value: '"Inter", "Noto Sans TC", system-ui, sans-serif'
+      count: 1
+    font_sizes:
+    - value: 16px
+      count: 4
+    - value: 24px
+      count: 2
+    - value: 48px
+      count: 2
+    - value: 32px
+      count: 1
+    - value: 14px
+      count: 1
+    font_weights:
+    - value: '600'
+      count: 3
+    - value: '700'
+      count: 2
+    - value: '400'
+      count: 1
+    line_heights:
+    - value: '1.6'
+      count: 2
+    - value: '1.15'
+      count: 1
+    - value: '1.25'
+      count: 1
+    - value: '1.3'
+      count: 1
+    letter_spacing:
+    - value: -0.01em
+      count: 1
+    - value: -0.02em
+      count: 1
+    spacing_values:
+    - value: 24px
+      count: 6
+    - value: 48px
+      count: 3
+    - value: 12px
+      count: 2
+    - value: 8px
+      count: 2
+    - value: 16px
+      count: 2
+    - value: 32px
+      count: 1
+    border_radius:
+    - value: 12px
+      count: 3
+    box_shadows:
+    - value: 0 1px 3px rgba(15, 23, 42, 0.08)
+      count: 1
+    - value: 0 8px 24px rgba(15, 23, 42, 0.12)
+      count: 1
+    transitions:
+    - value: background 200ms cubic-bezier(0.16, 1, 0.3, 1)
+      count: 1
+    - value: box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1)
+      count: 1
+    - value: none
+      count: 1
+    breakpoints:
+    - value: 'min-width: 768px'
+      count: 1
+    - value: 'min-width: 1024px'
+      count: 1
+    css_variables:
+      --color-primary: '#2563EB'
+      --color-primary-dark: '#1D4ED8'
+      --color-ink: '#0F172A'
+      --color-muted: '#64748B'
+      --color-surface: '#FFFFFF'
+      --color-surface-alt: '#F8FAFC'
+      --color-danger: '#DC2626'
+      --color-success: '#16A34A'
+      --space-1: 4px
+      --space-2: 8px
+      --space-3: 16px
+      --space-4: 24px
+      --space-5: 32px
+      --space-6: 48px
+      --radius-sm: 6px
+      --radius-md: 12px
+      --radius-lg: 20px
+      --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08)
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1)
+    naming:
+      counts:
+        single-word: 9
+        kebab: 7
+        bem: 3
+      dominant: kebab
+      sampled: 19
+    tailwind_classes:
+    - value: px-6
+      count: 3
+    - value: flex
+      count: 2
+    - value: rounded-xl
+      count: 2
+    - value: py-3
+      count: 2
+    - value: flex-col
+      count: 1
+    - value: gap-4
+      count: 1
+    - value: py-12
+      count: 1
+    - value: md:px-8
+      count: 1
+    - value: lg:px-12
+      count: 1
+    - value: text-5xl
+      count: 1
+    - value: font-bold
+      count: 1
+    - value: tracking-tight
+      count: 1
+    - value: text-slate-900
+      count: 1
+    - value: text-base
+      count: 1
+    - value: leading-relaxed
+      count: 1
+    - value: text-slate-500
+      count: 1
+    - value: max-w-prose
+      count: 1
+    - value: gap-2
+      count: 1
+    - value: items-center
+      count: 1
+    - value: transition
+      count: 1
+    - value: duration-200
+      count: 1
+    stack:
+      detected:
+      - Next.js
+      - React
+      - Tailwind CSS
+      - Framer Motion
+      - TypeScript
+      config_files:
+      - tailwind.config.js
+    contrast_sample:
+      fg: '#0F172A'
+      bg: '#FFFFFF'
+      ratio: 17.85

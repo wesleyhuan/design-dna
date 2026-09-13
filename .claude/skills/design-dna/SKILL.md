@@ -67,7 +67,8 @@ python dna.py review <proposal_id>
 其他規則：
 
 - `body` 用 `## Rule` / `## Rationale` / `## Do` / `## Avoid` 四段，Do 與 Avoid 各給實際程式碼。
-- `evidence` 一定要填，寫清楚是從哪個來源、看到什麼數據推出來的。
+- `evidence` 一定要填：`source` 是任務包列出的來源 id，`locator` 是 `raw/` 底下的檔案路徑
+  （可加選擇器），`detail` 寫看到什麼數據。這條鏈要能讓人打開原件找到那一行。
 - `confidence` 誠實給。跨多檔一致的給 0.8 以上；只出現一兩次的給 0.4 以下，並在 Rationale 說明這是推測。
 - 用 `[[其他基因id]]` 互相連結。這些連結會構成 wiki 關聯圖，也會變成匯出時的可點連結。
 - `priority` 只有真正不能違反的才給 `must`。整份都是 must 等於都不是 must。

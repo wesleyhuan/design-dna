@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 from . import __version__, analyze as analyze_mod, exporters
-from .ingest import ingest as do_ingest, summarize
+from .ingest import ingest as do_ingest, summarize, verify_source
 from .models import Gene, split_sections
 from .resolve import inheritance_chain, link_graph, resolve
 from .store import BASE_PROFILE, Workspace
@@ -160,15 +160,9 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     ws = get_ws(args)
     if not ws.exists:
         return fail("這裡不是 design-dna 工作區。先執行： python -m design_dna init")
-    keep_raw = None
-    if args.keep_raw:
-        keep_raw = True
-    elif args.no_raw:
-        keep_raw = False
-
     try:
         src = do_ingest(ws, args.target, profile=args.profile,
-                        note=args.note or "", keep_raw=keep_raw)
+                        note=args.note or "", keep_raw=not args.no_raw)
     except FileNotFoundError as exc:
         return fail(str(exc))
 
@@ -176,8 +170,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     for line in summarize(src):
         info("  · " + line)
     if src.files:
-        info("  · 已保存原始檔 " + str(len(src.files)) + " 個到 dna/sources/"
-             + src.id + "/raw/")
+        info("  · 原件在 dna/sources/" + src.id + "/raw/，會跟著 repo 一起版控")
     if src.kind == "web" and not (src.facts.get("web") or {}).get("scanned_files"):
         warn("網頁抓取沒拿到內容，請確認網址或改用本地檔案。")
     info("")
@@ -188,10 +181,20 @@ def cmd_ingest(args: argparse.Namespace) -> int:
 def cmd_sources(args: argparse.Namespace) -> int:
     ws = get_ws(args)
     if args.remove:
-        if ws.delete_source(args.remove):
-            ok("已刪除來源 " + args.remove)
-            return 0
-        return fail("找不到來源：" + args.remove)
+        if ws.get_source(args.remove) is None:
+            return fail("找不到來源：" + args.remove)
+        citing = ws.genes_citing(args.remove)
+        if citing and not args.force:
+            info("這份來源是下列規則的證據，刪掉後它們就追不回出處：")
+            for prof, gid in citing:
+                info("  · " + prof + " / " + gid)
+            return fail("已取消。確定要刪請加 --force")
+        ws.delete_source(args.remove)
+        ok("已刪除來源 " + args.remove)
+        if citing:
+            warn(str(len(citing)) + " 條規則的證據現在指向不存在的來源，"
+                 "`doctor` 會持續提醒。")
+        return 0
     rows = [[s.id, s.kind, s.profile, s.added,
              (s.origin[:52] + "…") if len(s.origin) > 53 else s.origin]
             for s in ws.list_sources()]
@@ -422,6 +425,7 @@ def cmd_export(args: argparse.Namespace) -> int:
 def cmd_doctor(args: argparse.Namespace) -> int:
     ws = get_ws(args)
     problems = 0
+    source_ids = {s.id for s in ws.list_sources()}
     for prof in ws.list_profiles():
         r = resolve(ws, prof.id, include_deprecated=True)
         graph = link_graph(r)
@@ -453,6 +457,14 @@ def cmd_doctor(args: argparse.Namespace) -> int:
                           "（匯出後會是死連結）：" + ", ".join(broken))
         if len(inheritance_chain(ws, prof.id)) == 0:
             issues.append("繼承鏈解析失敗（可能有循環繼承）")
+        # 只看本層的基因，繼承來的由父 profile 那一輪負責，避免重複報
+        orphans = sorted({
+            g.id + " → " + e.source
+            for g in ws.list_genes(prof.id) for e in g.evidence
+            if e.source and e.source != "builtin" and e.source not in source_ids
+        })
+        if orphans:
+            issues.append("證據指向不存在的來源：" + ", ".join(orphans))
 
         info("profile `" + prof.id + "` — " + str(len(r.genes)) + " 條規則")
         for msg in issues:
@@ -460,6 +472,20 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             problems += 1
         if not issues:
             info("  沒有問題")
+
+    info("")
+    info("來源原件 — " + str(len(source_ids)) + " 份")
+    source_issues = 0
+    for src in ws.list_sources():
+        found = verify_source(ws, src)
+        if not src.files:
+            found.append("沒有留底原件，換機器後無法驗證")
+        for msg in found:
+            warn("  " + src.id + "：" + msg)
+            source_issues += 1
+    if not source_issues:
+        info("  全部完整")
+    problems += source_issues
     info("")
     if problems:
         warn("共 " + str(problems) + " 個問題。")
@@ -521,12 +547,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("target", help="檔案 / 資料夾 / 網址")
     sp.add_argument("--profile", default=BASE_PROFILE)
     sp.add_argument("--note", help="這份資料是什麼")
-    sp.add_argument("--keep-raw", action="store_true", help="強制保留原始檔副本")
-    sp.add_argument("--no-raw", action="store_true", help="不要保留原始檔副本")
+    sp.add_argument("--no-raw", action="store_true",
+                    help="不留底原件（機密資料用；代價是換機器後無法回頭驗證）")
     sp.set_defaults(func=cmd_ingest)
 
     sp = sub.add_parser("sources", help="列出已登錄的參考資料")
     sp.add_argument("--remove", help="刪除指定來源 id")
+    sp.add_argument("--force", action="store_true",
+                    help="即使有規則拿它當證據也照樣刪")
     sp.set_defaults(func=cmd_sources)
 
     sp = sub.add_parser("analyze", help="產生給 AI 的分析任務包")

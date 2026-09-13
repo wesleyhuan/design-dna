@@ -14,7 +14,7 @@ related:
 - spacing-rhythm
 - type-scale
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: 專案分成 tokens.css（19 個變數）與 components.css，元件檔沒有任何硬編碼的新值
 ---
 

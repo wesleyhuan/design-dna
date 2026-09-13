@@ -13,7 +13,7 @@ related:
 - semantic-color-roles
 - design-token-first
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: '#2563EB / #0F172A / #64748B / #FFFFFF 跨 4 個檔案穩定出現，且都有對應的 CSS 變數'
 ---
 

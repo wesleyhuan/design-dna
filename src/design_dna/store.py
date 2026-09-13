@@ -236,6 +236,15 @@ class Workspace:
         write_yaml(self.source_dir(source.id) / "source.yaml", source.to_dict())
         return source
 
+    def genes_citing(self, source_id: str) -> list[tuple[str, str]]:
+        """哪些基因拿這份來源當證據。回傳 (profile, gene_id)。刪來源前必查。"""
+        hits: list[tuple[str, str]] = []
+        for prof in self.list_profiles():
+            for gene in self.list_genes(prof.id):
+                if any(e.source == source_id for e in gene.evidence):
+                    hits.append((prof.id, gene.id))
+        return hits
+
     def delete_source(self, source_id: str) -> bool:
         d = self.source_dir(source_id)
         if not d.is_dir():

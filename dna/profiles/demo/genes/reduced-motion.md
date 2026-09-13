@@ -12,7 +12,7 @@ tags:
 related:
 - motion-timing
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: 'components.css 有 @media (prefers-reduced-motion: reduce) 全域關閉 transition'
 ---
 

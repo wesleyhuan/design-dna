@@ -220,7 +220,9 @@ class Source:
     profile: str = ""
     added: str = field(default_factory=today)
     note: str = ""
-    files: list[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)        # raw/ 底下的相對路徑
+    # 每個留底檔的 sha256。換機器 clone 之後用來確認證據原件沒遺失、沒被改過
+    checksums: dict[str, str] = field(default_factory=dict)
     facts: dict[str, Any] = field(default_factory=dict)   # 確定性抽取結果
 
     def to_dict(self) -> dict[str, Any]:
@@ -236,5 +238,6 @@ class Source:
             added=data.get("added") or today(),
             note=data.get("note", ""),
             files=list(data.get("files") or []),
+            checksums=dict(data.get("checksums") or {}),
             facts=dict(data.get("facts") or {}),
         )

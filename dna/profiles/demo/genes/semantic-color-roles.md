@@ -13,7 +13,7 @@ related:
 - core-color-palette
 - design-token-first
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: 19 個 CSS 變數全部是 --color-primary / --color-ink 這類語意名，沒有 --blue-500
 ---
 

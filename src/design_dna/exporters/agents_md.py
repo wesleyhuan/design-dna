@@ -196,9 +196,11 @@ def render_wiki_page(gene: Gene) -> str:
     if gene.inherited_from:
         meta.append("- **繼承自**：`" + gene.inherited_from + "`")
     if gene.evidence:
-        ev = "; ".join(filter(None, [e.detail or e.locator or e.source
-                                     for e in gene.evidence]))
-        meta.append("- **證據**：" + ev)
+        meta.append("- **證據**：")
+        for e in gene.evidence:
+            where = " / ".join(filter(None, [e.source, e.locator]))
+            meta.append("  - " + (e.detail or "（未說明）")
+                        + ("（`" + where + "`）" if where else ""))
     links = gene.links()
     if links:
         meta.append("- **相關**：" + ", ".join(

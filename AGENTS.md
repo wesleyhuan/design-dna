@@ -82,6 +82,12 @@ src/design_dna/
 ## 已知的取捨
 
 - `slugify` 保留 CJK，所以中文標題會產生中文檔名。這是刻意的（可讀性 > 純 ASCII）。
-- `sources/` 預設只保存圖片與文件的副本，不複製整包原始碼專案（太大，原路徑仍記錄在案）。
+- **可追溯性優先於 repo 大小**（使用者的明確決定）。ingest 預設把實際被分析的檔案
+  複製進 `dna/sources/<id>/raw/` 並記錄 sha256；網址來源存 HTML/CSS 快照。
+  原路徑只在當初那台機器有意義，`raw/` 才是跟著 repo 走的證據。不要把預設改回不留底。
+- `.gitattributes` 對 `dna/sources/*/raw/**` 設 `-text`。證據原件必須逐位元組保留，
+  否則 Windows clone 時被轉成 CRLF，sha256 會對不上。寫快照要用 `write_bytes`，理由相同。
+- 有基因引用的來源不能直接刪（CLI 要 `--force`、API 回 409）。`doctor` 會檢查
+  證據是否指向存在的來源、原件是否遺失或被改過。
 - Web UI 只綁 `127.0.0.1`，且寫入請求檢查 Host 與 Origin。這個服務能讀寫本機檔案，
   不要為了方便把綁定位址開放出去。

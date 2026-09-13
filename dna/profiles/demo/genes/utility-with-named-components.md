@@ -12,9 +12,9 @@ tags:
 related:
 - design-token-first
 evidence:
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: JSX 同時出現 Tailwind utility（flex gap-4 px-6）與具名 class（btn-primary、section）
-- source: 20260908-005028-sample-site
+- source: 20260913-144030-sample-site
   detail: CSS 選擇器命名以 kebab-case 為主（7 次），卡片使用 BEM（card__title / card--featured，3 次）
 ---
 

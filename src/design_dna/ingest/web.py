@@ -9,8 +9,6 @@ import re
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
-from .code import analyze_code
-
 USER_AGENT = "design-dna/0.1 (+local design style analyzer)"
 MAX_CSS_FILES = 12
 TIMEOUT = 20
@@ -78,13 +76,3 @@ def fetch_site(url: str) -> dict[str, Any]:
         "docs": docs,
         "html_bytes": len(html),
     }
-
-
-def analyze_url(url: str) -> dict[str, Any]:
-    site = fetch_site(url)
-    if not site.get("ok"):
-        return site
-    docs = site.pop("docs")
-    facts = analyze_code(None, extra_texts=docs)
-    facts["site"] = site
-    return facts
