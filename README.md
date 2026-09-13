@@ -42,11 +42,13 @@ pip install pymupdf
 ## 快速開始
 
 ```bash
-python dna.py init                                    # 建立工作區
-python dna.py profile new personal --title "我的風格"   # 建一個風格檔
-python dna.py ingest D:\projects\my-old-site --profile personal --note "去年做的官網"
-python dna.py analyze --profile personal              # 產生 AI 分析任務包
+python dna.py init                                    # 建立工作區（含 base 與 personal）
+python dna.py ingest D:\projects\my-old-site --note "去年做的官網"
+python dna.py analyze                                 # 產生 AI 分析任務包
 ```
+
+`--profile` 沒寫時一律是 `personal`。要寫進共用基底必須明講 `--profile base`，
+這樣忘了加參數時資料不會污染所有 profile 都會繼承的那一層。
 
 最後一步會印出一句話，把它貼給你的 coding agent：
 
@@ -58,7 +60,8 @@ agent 會讀完抽取出來的事實、打開需要親自看的圖與 PDF，然�
 
 ```bash
 python dna.py review 20260908-005048-personal   # 逐條確認（y/n/a/q）
-python dna.py export --profile personal         # 產生 build/personal/AGENTS.md
+python dna.py export                            # 產生 build/personal/AGENTS.md
+python dna.py export --target claude            # 用 Claude Code 的話改用這個
 ```
 
 把 `build/personal/` 整個資料夾複製到任何專案根目錄，就完成移植了。
@@ -186,8 +189,21 @@ build/personal/
    └─ ...                  每條規則一頁，[[連結]] 已轉成可點的相對連結
 ```
 
-`AGENTS.md` 是跨 agent 的通用標準，Codex、Cursor、Copilot、Gemini CLI、Claude Code 都讀得懂。
-要加 `CLAUDE.md` 或 Cursor rules 格式，在 `src/design_dna/exporters/` 加一個模組即可。
+### 匯出目標
+
+| `--target` | 產出 | 誰會自動讀 |
+| --- | --- | --- |
+| `agents`（預設） | `AGENTS.md` + `design-dna/` | Codex、Cursor、GitHub Copilot、Gemini CLI、Windsurf 等 |
+| `claude` | 上面全部 + 只有一行 `@AGENTS.md` 的 `CLAUDE.md` | 上面全部 + **Claude Code** |
+
+**Claude Code 不讀 `AGENTS.md`**，只讀 `CLAUDE.md`，所以要給它用請加 `--target claude`。
+`CLAUDE.md` 只是匯入指令，規則內容仍只有 `AGENTS.md` 一份，不會兩邊不同步。
+目標專案已經有自己的 `CLAUDE.md` 時不要覆蓋，把 `@AGENTS.md` 這一行加進去即可。
+
+沒有檔案系統的平台（ChatGPT、Claude.ai Projects、v0 這類）跟不了 `index` 模式的相對連結，
+改用 `--mode full` 產生單一檔再貼上或上傳。
+
+要加 Cursor rules 等其他格式，在 `src/design_dna/exporters/` 加一個模組即可。
 
 ## 指令一覽
 

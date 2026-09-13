@@ -21,6 +21,9 @@ from .models import Gene, Profile, Source, slugify, today
 
 FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?(.*)\Z", re.S)
 BASE_PROFILE = "base"
+# 沒指定 --profile 時寫到哪。刻意不是 base：忘了加參數時，
+# 資料應該落在個人風格檔，而不是污染所有 profile 共用的基底。
+DEFAULT_PROFILE = "personal"
 
 
 # --------------------------------------------------------------------------
@@ -102,6 +105,12 @@ class Workspace:
                 BASE_PROFILE,
                 name="共用基底",
                 description="所有 profile 預設繼承的通用規則。放跨專案都成立的習慣。",
+            )
+        if not (self.profile_dir(DEFAULT_PROFILE) / "profile.yaml").exists():
+            self.create_profile(
+                DEFAULT_PROFILE,
+                name="個人風格",
+                description="沒指定 --profile 時的預設風格檔。",
             )
 
     # -- 路徑 ------------------------------------------------------------

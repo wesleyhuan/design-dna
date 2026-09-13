@@ -115,6 +115,10 @@
     <header class="view-head">
       <h1>匯出</h1>
       <div class="head-actions">
+        <select id="exportTarget" class="input">
+          <option value="agents">agents — AGENTS.md</option>
+          <option value="claude">claude — AGENTS.md + CLAUDE.md</option>
+        </select>
         <select id="exportMode" class="input">
           <option value="index">index — 主檔放 MUST + 索引（省 context）</option>
           <option value="full">full — 全部攤平成單一檔</option>
