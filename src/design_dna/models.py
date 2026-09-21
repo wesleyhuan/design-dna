@@ -16,6 +16,9 @@ from .taxonomy import CATEGORY_KEYS, PRIORITIES, STATUSES
 
 WIKILINK_RE = re.compile(r"\[\[([^\[\]|]+?)(?:\|[^\[\]]*)?\]\]")
 SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
+# Windows 保留裝置名。不分大小寫、加副檔名也一樣（con.md 照樣建不出來），
+# 在 mac/Linux 建的 repo clone 到 Windows 會直接失敗，所以 slug 一律避開
+WINDOWS_RESERVED_RE = re.compile(r"^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])$")
 
 
 def split_sections(body: str) -> dict[str, str]:
@@ -43,6 +46,8 @@ def slugify(text: str) -> str:
     text = re.sub(r"[\s_/]+", "-", text)
     text = re.sub(r"[^\w\-一-鿿]", "", text)
     text = re.sub(r"-{2,}", "-", text).strip("-")
+    if WINDOWS_RESERVED_RE.match(text):
+        text += "-x"                # 結果本身不再是保留字，重跑 slugify 不會再變
     return text or "untitled"
 
 

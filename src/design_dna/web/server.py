@@ -22,7 +22,7 @@ from .. import __version__, analyze as analyze_mod, exporters
 from ..ingest import ingest as do_ingest, summarize, verify_source
 from ..models import Gene, slugify
 from ..resolve import link_graph, resolve
-from ..store import BASE_PROFILE, Workspace
+from ..store import BASE_PROFILE, DEFAULT_PROFILE, Workspace
 from ..taxonomy import (CATEGORIES, PRIORITIES, PRIORITY_LABEL, STATUSES,
                         STATUS_LABEL)
 
@@ -193,7 +193,8 @@ def api_ingest(ws: Workspace, m, query, body) -> dict[str, Any]:
     if not target:
         raise ApiError("請給一個檔案路徑、資料夾或網址")
     try:
-        src = do_ingest(ws, target, profile=body.get("profile") or BASE_PROFILE,
+        src = do_ingest(ws, target,
+                        profile=body.get("profile") or DEFAULT_PROFILE,
                         note=body.get("note") or "",
                         keep_raw=body.get("keep_raw", True) is not False)
     except FileNotFoundError as exc:
@@ -205,7 +206,7 @@ def api_ingest(ws: Workspace, m, query, body) -> dict[str, Any]:
 
 @route("POST", "/api/analyze")
 def api_analyze(ws: Workspace, m, query, body) -> dict[str, Any]:
-    profile = body.get("profile") or BASE_PROFILE
+    profile = body.get("profile") or DEFAULT_PROFILE
     sources = body.get("sources") or [s.id for s in ws.list_sources()
                                       if s.profile == profile]
     if not sources:
@@ -264,7 +265,7 @@ def api_proposal_delete(ws: Workspace, m, query, body) -> dict[str, Any]:
 
 @route("GET", "/api/export")
 def api_export_preview(ws: Workspace, m, query, body) -> dict[str, Any]:
-    profile = (query.get("profile") or [BASE_PROFILE])[0]
+    profile = (query.get("profile") or [DEFAULT_PROFILE])[0]
     mode = (query.get("mode") or ["index"])[0]
     target = (query.get("target") or [exporters.DEFAULT_EXPORTER])[0]
     if ws.get_profile(profile) is None:
@@ -282,7 +283,7 @@ def api_export_preview(ws: Workspace, m, query, body) -> dict[str, Any]:
 
 @route("POST", "/api/export")
 def api_export_write(ws: Workspace, m, query, body) -> dict[str, Any]:
-    profile = body.get("profile") or BASE_PROFILE
+    profile = body.get("profile") or DEFAULT_PROFILE
     if ws.get_profile(profile) is None:
         raise ApiError("找不到 profile：" + profile, 404)
     r = resolve(ws, profile)

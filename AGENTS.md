@@ -52,7 +52,9 @@ src/design_dna/
     web.py           抓 HTML + 外部 CSS，轉交 code.py
     document.py      md/txt 直讀、docx 用 zipfile 拆、pdf 交給 agent
   analyze.py       任務包產生、提案正規化、套用到 profile；可選的 Anthropic API 路徑
-  exporters/       AGENTS.md 產生器（index / full 兩種形態）
+  exporters/       匯出器（index / full 兩種形態）
+    agents_md.py     AGENTS.md + design-dna/ wiki 頁
+    claude_md.py     agents_md 的超集，多一份 `@AGENTS.md` 匯入的 CLAUDE.md
   cli.py           argparse 介面
   web/server.py    stdlib HTTP 伺服器 + JSON API
   web/static/      單頁 UI
@@ -64,9 +66,12 @@ src/design_dna/
 
 - **`dna/` 是使用者的資料。** 不要為了測試往裡面寫東西，測試用 scratchpad 或 `demo` profile。
 - **加新的 category** 只改 `taxonomy.py`，其他地方都是從那裡讀的。
-- **加新的匯出格式**（CLAUDE.md、Cursor rules）：在 `exporters/` 加一個模組，
+- **加新的匯出格式**（Cursor rules 等）：在 `exporters/` 加一個模組，
   提供 `render(resolved, mode, include_proposed)` 與 `export(resolved, out_dir, ...)`，
-  登錄到 `exporters/__init__.py` 的 `EXPORTERS`。CLI 的 `--target` 會自動出現新選項。
+  登錄到 `exporters/__init__.py` 的 `EXPORTERS`。CLI 的 `--target` 會自動出現新選項；
+  Web UI 的目標選單是寫死在 `index.html` 的，要記得一起加。
+- **不要宣稱某個 agent 會讀 AGENTS.md，除非查證過。** Claude Code 就不讀（只讀 CLAUDE.md），
+  README 曾經寫錯。
 - **抽取器要保持確定性。** `ingest/` 底下不准出現 LLM 呼叫。詮釋是 `analyze.py` 之後的事。
 - **提案一定要經過使用者確認才寫入 profile。** 不要加「自動採納」的預設行為。
 
@@ -82,6 +87,9 @@ src/design_dna/
 ## 已知的取捨
 
 - `slugify` 保留 CJK，所以中文標題會產生中文檔名。這是刻意的（可讀性 > 純 ASCII）。
+- `slugify` 會把 Windows 保留裝置名（`con` `nul` `aux` `prn` `com0-9` `lpt0-9`）加上 `-x` 後綴，
+  否則在 mac/Linux 建的 repo clone 到 Windows 會建不出檔案。`dna/sources/*/raw/` 的原件保留原檔名，
+  不經過 slugify，所以這一層沒有防護。
 - **可追溯性優先於 repo 大小**（使用者的明確決定）。ingest 預設把實際被分析的檔案
   複製進 `dna/sources/<id>/raw/` 並記錄 sha256；網址來源存 HTML/CSS 快照。
   原路徑只在當初那台機器有意義，`raw/` 才是跟著 repo 走的證據。不要把預設改回不留底。

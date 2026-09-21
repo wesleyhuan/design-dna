@@ -19,7 +19,7 @@ from typing import Any
 
 from .models import Gene, slugify, today
 from .resolve import resolve
-from .store import Workspace
+from .store import DEFAULT_PROFILE, Workspace
 from .taxonomy import CATEGORIES, PRIORITIES
 
 DEFAULT_MODEL = "claude-opus-5"
@@ -172,7 +172,7 @@ TASK_TEMPLATE = """# Design DNA 分析任務：{profile}
 """
 
 
-def build_task(ws: Workspace, source_ids: list[str], profile: str = "base",
+def build_task(ws: Workspace, source_ids: list[str], profile: str = DEFAULT_PROFILE,
                count: int = 8, count_max: int = 16) -> dict[str, Any]:
     """產生任務包，回傳 {proposal_id, task_path, proposal_path}。"""
     proposal_id = datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + slugify(profile)

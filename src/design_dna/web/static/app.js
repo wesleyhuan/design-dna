@@ -535,21 +535,26 @@ async function applyProposal() {
 
 async function loadExport() {
   try {
+    const target = $("#exportTarget").value;
     const data = await api("GET", "/api/export?profile=" +
-      encodeURIComponent(S.profile) + "&mode=" + encodeURIComponent($("#exportMode").value));
+      encodeURIComponent(S.profile) + "&mode=" + encodeURIComponent($("#exportMode").value) +
+      "&target=" + encodeURIComponent(target));
     $("#exportPreview").textContent = data.text;
     $("#exportHint").innerHTML =
       "已確認 <b>" + data.confirmed + "</b> 條規則會被匯出（共 " + data.total +
       " 條，proposed 與 deprecated 不匯出）。<br>寫入位置：<code>" +
       esc(data.out_dir) + "</code><br>" +
-      "把整個資料夾複製到目標專案根目錄，任何讀 AGENTS.md 的 agent 都會吃到這份設計 DNA。";
+      "把整個資料夾複製到目標專案根目錄。" +
+      (target === "claude"
+        ? "Claude Code 讀 CLAUDE.md，其他 agent 讀 AGENTS.md。目標專案已有 CLAUDE.md 的話，把 <code>@AGENTS.md</code> 這行加進去，別覆蓋。"
+        : "讀 AGENTS.md 的 agent 會吃到這份設計 DNA。<b>Claude Code 不讀 AGENTS.md</b>，要給它用請選 claude。");
   } catch (e) { toast(e.message, true); }
 }
 
 async function writeExport() {
   try {
     const res = await api("POST", "/api/export",
-      { profile: S.profile, mode: $("#exportMode").value });
+      { profile: S.profile, mode: $("#exportMode").value, target: $("#exportTarget").value });
     toast("已寫入 " + res.count + " 個檔案到 " + res.out_dir);
   } catch (e) { toast(e.message, true); }
 }
@@ -658,6 +663,7 @@ function wire() {
   });
 
   $("#exportMode").addEventListener("change", loadExport);
+  $("#exportTarget").addEventListener("change", loadExport);
   $("#writeExportBtn").addEventListener("click", writeExport);
   $("#copyExportBtn").addEventListener("click", async () => {
     await navigator.clipboard.writeText($("#exportPreview").textContent);

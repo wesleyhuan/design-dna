@@ -95,6 +95,9 @@ python dna.py review <proposal_id>
 
 判斷原則：**這條規則換一個客戶還成立嗎？** 成立就放 base，不成立就放子 profile。
 
+`--profile` 省略時是 `personal`。要動 base 一定要明寫 `--profile base`，
+而且寫進 base 前先跟使用者確認——base 的變更會擴散到每一個繼承它的 profile。
+
 ## 其他指令
 
 ```bash

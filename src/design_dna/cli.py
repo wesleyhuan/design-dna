@@ -17,7 +17,7 @@ from . import __version__, analyze as analyze_mod, exporters
 from .ingest import ingest as do_ingest, summarize, verify_source
 from .models import Gene, split_sections
 from .resolve import inheritance_chain, link_graph, resolve
-from .store import BASE_PROFILE, Workspace
+from .store import DEFAULT_PROFILE, Workspace
 from .taxonomy import (CATEGORIES, PRIORITY_LABEL, PRIORITY_WORD,
                        STATUS_LABEL, category_label)
 
@@ -87,6 +87,14 @@ def get_ws(args: argparse.Namespace) -> Workspace:
     return Workspace(root) if root else Workspace.discover(".")
 
 
+def missing_profile(ws: Workspace, profile: str) -> int | None:
+    """profile 不存在就回傳錯誤碼。打錯字時不該默默寫進一個沒人看得到的 profile。"""
+    if ws.get_profile(profile) is not None:
+        return None
+    return fail("找不到 profile：" + profile + "。先執行： python -m design_dna "
+                "profile new " + profile)
+
+
 # ---------------------------------------------------------------------------
 # 指令
 # ---------------------------------------------------------------------------
@@ -102,7 +110,8 @@ def cmd_init(args: argparse.Namespace) -> int:
     info("  dna/inbox/      待確認的 AI 提案")
     info("  build/          匯出的 AGENTS.md")
     info("")
-    info("下一步： python -m design_dna profile new personal")
+    info("已備好 profile `" + DEFAULT_PROFILE + "`（沒加 --profile 時的預設）")
+    info("下一步： python -m design_dna ingest <路徑或網址> --note \"這是什麼\"")
     return 0
 
 
@@ -131,7 +140,7 @@ def cmd_profile(args: argparse.Namespace) -> int:
         return 0
 
     if args.action == "show":
-        r = resolve(ws, args.name or BASE_PROFILE)
+        r = resolve(ws, args.name or DEFAULT_PROFILE)
         info("profile : " + r.profile_id)
         info("名稱    : " + r.name)
         info("繼承鏈  : " + " → ".join(r.chain))
@@ -160,6 +169,8 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     ws = get_ws(args)
     if not ws.exists:
         return fail("這裡不是 design-dna 工作區。先執行： python -m design_dna init")
+    if (code := missing_profile(ws, args.profile)) is not None:
+        return code
     try:
         src = do_ingest(ws, args.target, profile=args.profile,
                         note=args.note or "", keep_raw=not args.no_raw)
@@ -204,6 +215,8 @@ def cmd_sources(args: argparse.Namespace) -> int:
 
 def cmd_analyze(args: argparse.Namespace) -> int:
     ws = get_ws(args)
+    if (code := missing_profile(ws, args.profile)) is not None:
+        return code
     sources = args.source or [s.id for s in ws.list_sources()
                               if not args.profile or s.profile == args.profile]
     if not sources:
@@ -346,6 +359,8 @@ def cmd_review(args: argparse.Namespace) -> int:
 def cmd_gene(args: argparse.Namespace) -> int:
     ws = get_ws(args)
     profile = args.profile
+    if (code := missing_profile(ws, profile)) is not None:
+        return code
 
     if args.action == "list":
         r = resolve(ws, profile, include_deprecated=True)
@@ -412,13 +427,21 @@ def cmd_export(args: argparse.Namespace) -> int:
         return fail(str(exc))
 
     confirmed = len(r.confirmed())
-    ok("已匯出 " + str(confirmed) + " 條規則到 " + result["main"])
-    if result["count"] > 1:
-        info("  另有 " + str(result["count"] - 1) + " 個 wiki 頁在 "
-             + str(out / "design-dna") + "/")
+    ok("已匯出 " + str(confirmed) + " 條規則到 " + str(out))
+    top = [Path(f).name for f in result["files"] if Path(f).parent == out]
+    for name in top:
+        info("  · " + name)
+    pages = result["count"] - len(top)
+    if pages:
+        info("  · design-dna/ 底下 " + str(pages) + " 個 wiki 頁")
     info("")
-    info("移植方式：把整個 " + str(out) + " 目錄複製到目標專案根目錄即可，")
-    info("任何讀 AGENTS.md 的 agent 都會自動吃到這份設計 DNA。")
+    info("移植方式：把整個 " + str(out) + " 目錄複製到目標專案根目錄即可。")
+    if "CLAUDE.md" in top:
+        info("Claude Code 讀 CLAUDE.md，其他 agent 讀 AGENTS.md，兩邊都吃得到。")
+        info("目標專案已經有 CLAUDE.md 的話別覆蓋，把 `@AGENTS.md` 這行加進去。")
+    else:
+        info("讀 AGENTS.md 的 agent（Codex / Cursor / Copilot 等）會自動吃到這份設計 DNA。")
+        warn("Claude Code 不讀 AGENTS.md。要給 Claude Code 用請加 --target claude")
     return 0
 
 
@@ -505,6 +528,8 @@ def cmd_web(args: argparse.Namespace) -> int:
 
 def cmd_graph(args: argparse.Namespace) -> int:
     ws = get_ws(args)
+    if (code := missing_profile(ws, args.profile)) is not None:
+        return code
     r = resolve(ws, args.profile)
     g = link_graph(r)
     if args.json:
@@ -545,7 +570,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("ingest", help="登錄一份參考資料（路徑或網址）")
     sp.add_argument("target", help="檔案 / 資料夾 / 網址")
-    sp.add_argument("--profile", default=BASE_PROFILE)
+    sp.add_argument("--profile", default=DEFAULT_PROFILE,
+                    help="預設 " + DEFAULT_PROFILE)
     sp.add_argument("--note", help="這份資料是什麼")
     sp.add_argument("--no-raw", action="store_true",
                     help="不留底原件（機密資料用；代價是換機器後無法回頭驗證）")
@@ -558,7 +584,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=cmd_sources)
 
     sp = sub.add_parser("analyze", help="產生給 AI 的分析任務包")
-    sp.add_argument("--profile", default=BASE_PROFILE)
+    sp.add_argument("--profile", default=DEFAULT_PROFILE,
+                    help="預設 " + DEFAULT_PROFILE)
     sp.add_argument("--source", action="append", help="只分析指定來源（可重複）")
     sp.add_argument("--count", type=int, default=8, help="期望產出的基因數下限")
     sp.add_argument("--api", action="store_true",
@@ -578,12 +605,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("gene", help="檢視與編輯單條規則")
     sp.add_argument("action", choices=["list", "show", "rm", "status"])
     sp.add_argument("gene_id", nargs="?")
-    sp.add_argument("--profile", default=BASE_PROFILE)
+    sp.add_argument("--profile", default=DEFAULT_PROFILE,
+                    help="預設 " + DEFAULT_PROFILE)
     sp.add_argument("--value", help="status 動作要設定的新狀態")
     sp.set_defaults(func=cmd_gene)
 
     sp = sub.add_parser("export", help="匯出成 AGENTS.md")
-    sp.add_argument("--profile", default=BASE_PROFILE)
+    sp.add_argument("--profile", default=DEFAULT_PROFILE,
+                    help="預設 " + DEFAULT_PROFILE)
     sp.add_argument("--target", default=exporters.DEFAULT_EXPORTER,
                     choices=exporters.available())
     sp.add_argument("--mode", default="index", choices=["index", "full"],
@@ -594,7 +623,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=cmd_export)
 
     sp = sub.add_parser("graph", help="顯示 wiki 連結圖")
-    sp.add_argument("--profile", default=BASE_PROFILE)
+    sp.add_argument("--profile", default=DEFAULT_PROFILE,
+                    help="預設 " + DEFAULT_PROFILE)
     sp.add_argument("--json", action="store_true")
     sp.set_defaults(func=cmd_graph)
 

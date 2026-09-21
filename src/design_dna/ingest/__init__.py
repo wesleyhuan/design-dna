@@ -23,7 +23,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from ..models import Source, slugify
-from ..store import Workspace
+from ..store import DEFAULT_PROFILE, Workspace
 from .code import CODE_EXTS, IGNORE_DIRS, analyze_code, collect_files
 from .document import DOC_EXTS, analyze_documents
 from .image import IMAGE_EXTS, analyze_images
@@ -159,7 +159,7 @@ def _write_snapshot(docs: list[tuple[str, str]], dest: Path
     return copied, checksums
 
 
-def ingest(ws: Workspace, target: str, profile: str = "base",
+def ingest(ws: Workspace, target: str, profile: str = DEFAULT_PROFILE,
            note: str = "", keep_raw: bool = True) -> Source:
     """把 target（路徑或網址）登錄成一筆 Source 並抽取事實。"""
     if is_url(target):
