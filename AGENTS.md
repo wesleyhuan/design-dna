@@ -16,12 +16,19 @@ python dna.py <command>          # 零安裝，直接跑
 python -m design_dna <command>   # pip install -e . 之後等效
 ```
 
-沒有測試框架。改動後至少跑一次：
+沒有單元測試框架，但有一支跨 OS 煙霧測試。改動後跑它就夠：
 
 ```bash
-python dna.py doctor
-python dna.py export --profile demo
+python scripts/smoke.py
 ```
+
+它在暫存工作區把 `init → ingest → analyze → review → export` 整條跑完，
+順便驗 `doctor` 與 demo 匯出（也就是以前要手動跑的那兩個指令），
+並檢查中文 / Windows 保留字檔名、wikilink 轉換、選用相依缺席時的降級。
+`.github/workflows/smoke.yml` 在 Windows / macOS / Linux × Python 3.10–3.13
+上跑同一支腳本，另外兩個 job 驗「選用相依全裝」與「連 pyyaml 都沒裝時的錯誤訊息」。
+
+加了新指令或新匯出目標，記得在 `scripts/smoke.py` 補一段。
 
 ## 相依
 
@@ -58,6 +65,7 @@ src/design_dna/
   cli.py           argparse 介面
   web/server.py    stdlib HTTP 伺服器 + JSON API
   web/static/      單頁 UI
+scripts/smoke.py   跨 OS 煙霧測試（CI 與本機都跑這支）
 ```
 
 資料在 `dna/`（profiles / sources / inbox），產物在 `build/`。
@@ -77,7 +85,7 @@ src/design_dna/
 
 ## Windows 注意事項
 
-開發環境是 Windows + Git Bash。
+開發環境是 Windows + Git Bash，所以 macOS / Linux 的行為靠 CI 把關，不要憑印象斷定。
 
 - 終端輸出中文需要 `PYTHONIOENCODING=utf-8`，CLI 已在 `_setup_stdout()` 處理。
 - **不要用 bash heredoc 寫 Python 原始碼**：這個環境的 heredoc 會吃掉反斜線
