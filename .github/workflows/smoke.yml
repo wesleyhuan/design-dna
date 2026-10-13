@@ -1,0 +1,78 @@
+name: smoke
+
+# 這個專案的賣點是移植性，但開發只在 Windows 上做。這條 workflow 負責把
+# 「應該跨 OS 都能跑」從推論變成每次 push 都驗證過的事實。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: ${{ matrix.os }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # 明列而非 os × python 全展開：macOS runner 是 arm64，
+        # setup-python 在上面沒有 3.10 的 build
+        include:
+          - { os: ubuntu-latest, python: "3.10" }   # pyproject 宣告的下限
+          - { os: ubuntu-latest, python: "3.13" }
+          - { os: windows-latest, python: "3.10" }
+          - { os: windows-latest, python: "3.13" }
+          - { os: macos-latest, python: "3.11" }
+          - { os: macos-latest, python: "3.13" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      # 只裝硬相依。選用相依缺席時要優雅降級，這裡就是在驗這件事
+      - name: 安裝硬相依（只有 pyyaml）
+        run: python -m pip install --disable-pip-version-check pyyaml
+
+      - name: 煙霧測試
+        run: python scripts/smoke.py
+
+  extras:
+    name: 選用相依都裝齊
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安裝全部相依
+        run: python -m pip install --disable-pip-version-check pyyaml pillow requests pymupdf
+      - name: 煙霧測試
+        run: python scripts/smoke.py
+
+  no-pyyaml:
+    name: 缺 pyyaml 要給人話
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # 刻意什麼都不裝。使用者第一次跑很可能就是這個狀態，
+      # 必須看到「請執行 pip install pyyaml」而不是 traceback
+      - name: 確認錯誤訊息是人看得懂的
+        run: |
+          set +e
+          output=$(python dna.py doctor 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          if [ "$code" -eq 0 ]; then
+            echo "::error::沒裝 pyyaml 卻成功了，預期要失敗"
+            exit 1
+          fi
+          if ! echo "$output" | grep -qi "pip install pyyaml"; then
+            echo "::error::錯誤訊息沒教使用者怎麼裝，可能是裸的 traceback"
+            exit 1
+          fi

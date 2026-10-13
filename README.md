@@ -1,5 +1,7 @@
 # Design DNA 🧬
 
+[![smoke](https://github.com/wesleyhuan/design-dna/actions/workflows/smoke.yml/badge.svg)](https://github.com/wesleyhuan/design-dna/actions/workflows/smoke.yml)
+
 把你設計網頁的習慣與風格，記錄成一份**可攜式的 AI 知識庫**。
 丟給任何 coding agent，它做出來的東西就會像你做的。
 
