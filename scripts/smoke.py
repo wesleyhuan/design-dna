@@ -144,7 +144,10 @@ def write_proposal(path: Path, proposal_id: str, source_id: str) -> None:
                  "\n## Avoid\n```css\n.stack{gap:18px}\n```\n",
                  category="spacing"),
             # con 是 Windows 保留裝置名，slugify 應該轉成 con-x
-            gene("con", "容器寬度", "## Rule\n內容最大寬 1200px。\n",
+            # 用標題寫法（空白、大寫）加別名的 wikilink，匯出時要 slugify 成檔名
+            gene("con", "容器寬度",
+                 "## Rule\n內容最大寬 1200px。\n\n"
+                 "強調色見 [[Core Color Palette|主色]]。\n",
                  category="layout"),
         ],
     }
@@ -166,6 +169,12 @@ def main() -> int:
     check("保留字判斷不誤殺", slugify("console") == "console")
     check("CJK 保留", slugify("間距節奏") == "間距節奏")
     check("slugify 可重複套用", slugify(slugify("NUL")) == slugify("NUL"))
+
+    from design_dna.analyze import normalize_proposal   # noqa: E402
+    from design_dna.store import DEFAULT_PROFILE         # noqa: E402
+    landed = normalize_proposal({"genes": []})["profile"]
+    check("提案漏了 profile 時落在預設 profile 而非 base",
+          landed == DEFAULT_PROFILE, landed)
 
     print("\n[2] repo 自身的知識庫（驗 .gitattributes 與證據 sha256）")
     run("doctor")
@@ -266,6 +275,9 @@ def main() -> int:
         page = (build / "design-dna" / "core-color-palette.md").read_text(
             encoding="utf-8")
         check("wikilink 轉成相對連結", "(間距節奏.md)" in page)
+        con_page = (build / "design-dna" / "con-x.md").read_text(encoding="utf-8")
+        check("標題寫法的 wikilink 指到 slug 檔名",
+              "[主色](core-color-palette.md)" in con_page, con_page[-200:])
 
         run("--root", str(work), "export", "--profile", "personal",
             "--target", "claude")

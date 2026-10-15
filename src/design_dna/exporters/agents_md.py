@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from ..models import Gene, split_sections
+from ..models import Gene, slugify, split_sections
 from ..resolve import ResolvedProfile
 from ..taxonomy import PRIORITY_WORD, category_label
 
@@ -46,11 +46,14 @@ def _demote(body: str, levels: int) -> str:
 
 
 def _linkify(body: str, prefix: str = "") -> str:
-    """[[gene-id]] → [gene-id](prefix/gene-id.md)，人與 agent 都能跟著走。"""
+    """[[gene-id]] → [gene-id](prefix/gene-id.md)，人與 agent 都能跟著走。
+
+    目標要跟檔名一樣經過 slugify，`[[Spacing Rhythm]]` 才會指到 spacing-rhythm.md。
+    """
     def sub(m: re.Match) -> str:
-        target = m.group(1).strip()
-        label = (m.group(2) or target).strip()
-        return "[" + label + "](" + prefix + target + ".md)"
+        raw = m.group(1).strip()
+        label = (m.group(2) or raw).strip()
+        return "[" + label + "](" + prefix + slugify(raw) + ".md)"
     return WIKILINK_RE.sub(sub, body)
 
 

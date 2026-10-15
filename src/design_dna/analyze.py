@@ -285,7 +285,8 @@ def normalize_proposal(raw: dict[str, Any]) -> dict[str, Any]:
         genes.append(g)
     return {
         "id": raw.get("id") or datetime.now().strftime("%Y%m%d-%H%M%S"),
-        "profile": slugify(raw.get("profile") or "base"),
+        # 漏了 profile 時落在預設 profile，不能落在 base —— 理由見 store.DEFAULT_PROFILE
+        "profile": slugify(raw.get("profile") or DEFAULT_PROFILE),
         "sources": list(raw.get("sources") or []),
         "created": raw.get("created") or today(),
         "status": raw.get("status") or "pending",
